@@ -1,7 +1,8 @@
 from fastapi import Depends, HTTPException, status, APIRouter
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.api.deps import get_db
+from app.api.deps import get_db, get_current_user
+from app.models.users import User
 from app.schemas.users import UserCreate, UserResponse
 from app.services import user as user_service
 
@@ -37,3 +38,6 @@ async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
         )
 
 
+@router.post("/me", response_model=UserResponse, status_code=status.HTTP_200_OK)
+async def read_me(current_user: User = Depends(get_current_user)):
+    return current_user
