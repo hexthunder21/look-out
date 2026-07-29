@@ -1,6 +1,7 @@
 from typing import AsyncGenerator
 from fastapi import HTTPException
 from fastapi.params import Depends
+from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from app.core.config import settings
@@ -9,6 +10,7 @@ from app.models.users import User
 from app.services.user import get_user
 import jwt
 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/users/login")
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     async with AsyncSessionLocal() as session:
@@ -16,7 +18,7 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def get_current_user(
-        token: str = Depends(settings.oauth2_scheme),
+        token: str = Depends(oauth2_scheme),
         db: AsyncSession = Depends(get_db)) -> User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
