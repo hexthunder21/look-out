@@ -39,7 +39,7 @@ async def get_current_user(
     return user
 
 
-# placehold
+# placeholder
 async def send_reset_password_email(email_to: str, token: str) -> None:
     print("\n==========================================")
     print(f"Instruction for {email_to}:")

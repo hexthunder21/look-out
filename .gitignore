@@ -1,5 +1,4 @@
 .env
 .venv
-./app.db
-/.idea
-app/app.db
+.idea
+./app/core/config.py

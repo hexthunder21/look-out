@@ -1,7 +1,7 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "My Async FastAPI Project"
+    PROJECT_NAME: str = "LOOK OUT - I'M CLOSE!"
     DATABASE_URL: str = "sqlite+aiosqlite:///./app.db"
     SECRET_KEY: str = "TfLSzeuyD3tVJ6lG1B6LRwtQqGD/6nPOwBpP5W1wyfY="
     ALGORITHM: str = "HS256"
