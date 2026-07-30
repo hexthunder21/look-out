@@ -15,4 +15,4 @@ class TargetResponse(BaseModel):
 
 class TargetWithMessageResponse(BaseModel):
     message: str
-    target: TargetResponse
+    # target: TargetResponse

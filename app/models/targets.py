@@ -1,7 +1,8 @@
+from __future__ import annotations
+
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database.session import Base
-from app.models.users import User
 
 
 class Target(Base):
@@ -12,4 +13,4 @@ class Target(Base):
     platform: Mapped[str] = mapped_column(String(50))
     username: Mapped[str] = mapped_column(String(60))
     target_url: Mapped[str] = mapped_column(String(255))
-    owner: Mapped["User"] = relationship(back_populates="targets", lazy="joined")
+    owner: Mapped[User] = relationship(back_populates="targets", lazy="joined")
