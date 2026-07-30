@@ -1,4 +1,4 @@
 .env
 .venv
 .idea
-./app/core/config.py
+app/core/config.py
