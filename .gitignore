@@ -1,3 +1,5 @@
 .env
 .venv
-app.db
+./app.db
+/.idea
+app/app.db
