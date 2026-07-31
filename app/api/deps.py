@@ -1,7 +1,8 @@
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Annotated
 from fastapi import HTTPException
 from fastapi.params import Depends
 from fastapi.security import OAuth2PasswordBearer
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from app.core.config import settings
@@ -46,3 +47,8 @@ async def send_reset_password_email(email_to: str, token: str) -> None:
     print(f"Copy this token to reset your password:")
     print(f"{token}")
     print("==========================================\n")
+
+
+class PaginationParams(BaseModel):
+    limit: int = 10
+    offset: int = 0

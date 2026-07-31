@@ -4,13 +4,13 @@ from pydantic import BaseModel, EmailStr, Field, ConfigDict
 class CreateTarget(BaseModel):
     username: str
     platform: str
-    target_url: str
+    target_url: str | None
 
 
 class TargetResponse(BaseModel):
     username: str
     platform: str
-    target_url: str
+    target_url: str | None
 
 
 class TargetWithMessageResponse(BaseModel):
