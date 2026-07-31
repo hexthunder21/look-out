@@ -1,10 +1,11 @@
 from fastapi import Depends, HTTPException, status, APIRouter, BackgroundTasks
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.api.deps import get_db, get_current_user, send_reset_password_email
+#from sqlalchemy.ext.asyncio import AsyncSession
+from app.api.deps import send_reset_password_email, CurrentUserDep, DBSessionDep
+#get_db, get_current_user
 from app.core.security import create_access_token
-from app.models.users import User
+#from app.models.users import User
 from app.schemas.token import Token
 from app.schemas.users import UserCreate, UserResponse
 from app.services import user as user_service
@@ -16,7 +17,7 @@ router = APIRouter()
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
+async def register(user_in: UserCreate, db: DBSessionDep):
     existing_user = await user_service.get_user(
         db=db, identifier=user_in.email
     )
@@ -44,10 +45,7 @@ async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/login", response_model=Token)
-async def login(
-        form_data: OAuth2PasswordRequestForm = Depends(),
-        db: AsyncSession = Depends(get_db)
-):
+async def login(db: DBSessionDep, form_data: OAuth2PasswordRequestForm = Depends()):
     user = await user_service.authenticate_user(
         db=db,
         username_or_email=form_data.username,
@@ -64,7 +62,7 @@ async def login(
 
 
 @router.get("/me", response_model=UserResponse, status_code=status.HTTP_200_OK)
-async def read_me(current_user: User = Depends(get_current_user)):
+async def read_me(current_user: CurrentUserDep):
     return current_user
 
 
@@ -72,7 +70,7 @@ async def read_me(current_user: User = Depends(get_current_user)):
 async def forgot_password(
         request: ForgotPasswordRequest,
         background_tasks: BackgroundTasks,
-        db: AsyncSession = Depends(get_db)):
+        db: DBSessionDep):
     user = await user_service.get_user(db=db, identifier=request.email)
     if user:
         reset_token = create_reset_password_token(email=user.email)
@@ -85,9 +83,7 @@ async def forgot_password(
 
 
 @router.post("/reset-password", response_model=ResetPasswordResponse, status_code=status.HTTP_202_ACCEPTED)
-async def reset_password(request: ResetPasswordRequest,
-                         db: AsyncSession = Depends(get_db)
-    ):
+async def reset_password(request: ResetPasswordRequest, db: DBSessionDep):
     email: str = verify_reset_password_token(request.token)
     user = await user_service.get_user(db=db, identifier=email)
     if user:

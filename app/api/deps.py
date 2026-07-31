@@ -2,7 +2,7 @@ from typing import AsyncGenerator, Annotated
 from fastapi import HTTPException
 from fastapi.params import Depends
 from fastapi.security import OAuth2PasswordBearer
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from app.core.config import settings
@@ -49,6 +49,13 @@ async def send_reset_password_email(email_to: str, token: str) -> None:
     print("==========================================\n")
 
 
-class PaginationParams(BaseModel):
-    limit: int = 10
-    offset: int = 0
+# =======================================================
+class PaginationTargetParams(BaseModel):
+    limit: int = Field(5, ge=1, lt=10, description="Limit the number of results")
+    offset: int = Field(0, ge=0, description="Offset for the results")
+
+
+TargetParamsDep = Annotated[PaginationTargetParams, Depends()]
+CurrentUserDep = Annotated[User, Depends(get_current_user)]
+DBSessionDep = Annotated[AsyncSession, Depends(get_db)]
+# =======================================================
