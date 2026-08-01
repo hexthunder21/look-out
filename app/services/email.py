@@ -1,10 +1,7 @@
 from fastapi_mail import ConnectionConfig, MessageSchema, MessageType, FastMail
 from pydantic import EmailStr
 from app.core.config import settings
-from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-TEMPLATE_FOLDER = BASE_DIR / "templates"
 
 conf = ConnectionConfig(
     MAIL_USERNAME=settings.MAIL_USERNAME,
@@ -17,7 +14,7 @@ conf = ConnectionConfig(
     MAIL_FROM_NAME=settings.MAIL_FROM_NAME,
     USE_CREDENTIALS=True,
     VALIDATE_CERTS=True,
-    TEMPLATE_FOLDER=TEMPLATE_FOLDER,
+    TEMPLATE_FOLDER=settings.TEMPLATE_FOLDER,
 )
 
 

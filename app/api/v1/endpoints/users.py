@@ -1,18 +1,22 @@
-from fastapi import Depends, HTTPException, status, APIRouter, BackgroundTasks
+from fastapi import Depends, HTTPException, status, APIRouter, BackgroundTasks, Request, Form
 from fastapi.security import OAuth2PasswordRequestForm
-from pydantic import EmailStr
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 from sqlalchemy.exc import IntegrityError
 from app.api.deps import CurrentUserDep, DBSessionDep
 from app.services.email import send_reset_password_email
-from app.core.security import create_access_token
 from app.schemas.token import Token
 from app.schemas.users import UserCreate, UserResponse
 from app.services import user as user_service
-from app.core.security import create_reset_password_token, verify_reset_password_token, hash_password
+from app.core.security import (create_reset_password_token, verify_reset_password_token,
+                               hash_password, create_access_token)
 from app.schemas.password_reset import ResetPasswordRequest, ResetPasswordResponse, ForgotPasswordRequest
+from app.core.config import settings
+
 
 
 router = APIRouter()
+template = Jinja2Templates(directory=settings.TEMPLATE_FOLDER)
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
@@ -83,9 +87,9 @@ async def forgot_password(
 
 
 @router.post("/reset-password", response_model=ResetPasswordResponse, status_code=status.HTTP_200_OK)
-async def reset_password(request: ResetPasswordRequest, db: DBSessionDep):
-    result = verify_reset_password_token(request.token) # we get here EmailStr
-    user = await user_service.get_user(db=db, identifier=result)
+async def reset_password(db: DBSessionDep, request: ResetPasswordRequest = Form(...)):
+    email = verify_reset_password_token(request.token)
+    user = await user_service.get_user(db=db, identifier=email)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -94,3 +98,15 @@ async def reset_password(request: ResetPasswordRequest, db: DBSessionDep):
 
     hashed_password = hash_password(request.new_password)
     await user_service.update_password(db=db, identifier=user.email, new_password=hashed_password)
+    return {"message": "Password successfully updated!"}
+
+
+@router.get("/reset-password/{token}", response_class=HTMLResponse, status_code=status.HTTP_200_OK)
+async def reset_password_page(request: Request, token: str):
+    email = verify_reset_password_token(token)
+
+    return template.TemplateResponse(
+        request=request,
+        name="reset_password_form.html",
+        context={"request": request, "token": token, "email": email},
+    )
