@@ -36,3 +36,12 @@ async def authenticate_user(db: AsyncSession, username_or_email: str, password: 
     if not verify_password(password, user.hashed_password):
         return None
     return user
+
+
+async def update_password(db: AsyncSession, identifier: str, new_password: str) -> None:
+    hashed_new_pass = hash_password(new_password)
+    user = await get_user(db=db, identifier=identifier)
+    user.hashed_password = hashed_new_pass
+    await db.commit()
+    await db.refresh(user)
+

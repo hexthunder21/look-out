@@ -1,11 +1,10 @@
 from fastapi import Depends, HTTPException, status, APIRouter, BackgroundTasks
 from fastapi.security import OAuth2PasswordRequestForm
+from pydantic import EmailStr
 from sqlalchemy.exc import IntegrityError
-#from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import send_reset_password_email, CurrentUserDep, DBSessionDep
-#get_db, get_current_user
+from app.core.config import settings
 from app.core.security import create_access_token
-#from app.models.users import User
 from app.schemas.token import Token
 from app.schemas.users import UserCreate, UserResponse
 from app.services import user as user_service
@@ -66,33 +65,32 @@ async def read_me(current_user: CurrentUserDep):
     return current_user
 
 
-@router.post("/forgot-password", status_code=status.HTTP_202_ACCEPTED)
+@router.post("/forgot-password", status_code=status.HTTP_200_OK)
 async def forgot_password(
         request: ForgotPasswordRequest,
         background_tasks: BackgroundTasks,
         db: DBSessionDep):
     user = await user_service.get_user(db=db, identifier=request.email)
     if user:
-        reset_token = create_reset_password_token(email=user.email)
+        reset_token = create_reset_password_token(email=request.email)
         background_tasks.add_task(
             send_reset_password_email,
             email_to=user.email,
             token=reset_token,
         )
+        return {"message": "Password reset email sent"}
     return {"message": "Password reset email sent"}
 
 
-@router.post("/reset-password", response_model=ResetPasswordResponse, status_code=status.HTTP_202_ACCEPTED)
+@router.post("/reset-password", response_model=ResetPasswordResponse, status_code=status.HTTP_200_OK)
 async def reset_password(request: ResetPasswordRequest, db: DBSessionDep):
-    email: str = verify_reset_password_token(request.token)
-    user = await user_service.get_user(db=db, identifier=email)
-    if user:
-        hashed_password = hash_password(request.new_password)
-        user.hashed_password = hashed_password
-        await db.commit()
-        return {"message": "Password was reset"}
-    else:
+    result = verify_reset_password_token(request.token) # we get here EmailStr
+    user = await user_service.get_user(db=db, identifier=result)
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
+            detail="User not found"
         )
+
+    hashed_password = hash_password(request.new_password)
+    await user_service.update_password(db=db, identifier=user.email, new_password=hashed_password)

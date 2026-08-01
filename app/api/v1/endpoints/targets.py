@@ -1,13 +1,10 @@
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
 from starlette import status
 from app.schemas.targets import CreateTarget, TargetResponse, TargetWithMessageResponse
-from app.api.deps import TargetParamsDep, CurrentUserDep, DBSessionDep # get_current_user, get_db, PaginationParams
+from app.api.deps import TargetParamsDep, CurrentUserDep, DBSessionDep
 from app.models.targets import Target
-#from app.models.users import User
-#from app.services import user as user_service
-#from sqlalchemy.ext.asyncio import AsyncSession
 
 
 router = APIRouter()

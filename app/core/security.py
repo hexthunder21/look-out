@@ -34,7 +34,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 def create_reset_password_token(email: str) -> str | None:
     data = {
         "sub": email,
-        "exp": datetime.now() + timedelta(minutes=10),
+        "exp": datetime.now(timezone.utc) + timedelta(minutes=10),
         "scope": "password_reset",
     }
     token = jwt.encode(data, settings.SECRET_KEY, settings.ALGORITHM)
@@ -43,13 +43,22 @@ def create_reset_password_token(email: str) -> str | None:
 
 def verify_reset_password_token(token: str) -> str:
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, settings.ALGORITHM)
-        if payload.get("scope") != "password_reset":
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid token type")
-
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         email: str = payload.get("sub")
-        if email is None:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid token")
-        return email
+        token_scope: str = payload.get("scope")
+        if email is None or token_scope != "password_reset":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token is invalid, please log in again",
+            )
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Token is invalid, please log in again",
+        )
     except jwt.PyJWTError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid token")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Error to validate token!"
+        )
+    return email
