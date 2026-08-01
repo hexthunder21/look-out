@@ -2,8 +2,8 @@ from fastapi import Depends, HTTPException, status, APIRouter, BackgroundTasks
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import EmailStr
 from sqlalchemy.exc import IntegrityError
-from app.api.deps import send_reset_password_email, CurrentUserDep, DBSessionDep
-from app.core.config import settings
+from app.api.deps import CurrentUserDep, DBSessionDep
+from app.services.email import send_reset_password_email
 from app.core.security import create_access_token
 from app.schemas.token import Token
 from app.schemas.users import UserCreate, UserResponse
