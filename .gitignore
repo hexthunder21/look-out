@@ -4,3 +4,6 @@
 app/core/config.py
 app.db
 app/app.db
+__pycache__/
+*.py[cod]
+*$py.class

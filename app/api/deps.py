@@ -42,7 +42,7 @@ async def get_current_user(
 
 # =======================================================
 class PaginationTargetParams(BaseModel):
-    limit: int = Field(5, ge=1, lt=10, description="Limit the number of results")
+    limit: int = Field(5, ge=1, le=10, description="Limit the number of results")
     offset: int = Field(0, ge=0, description="Offset for the results")
 
 

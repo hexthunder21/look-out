@@ -36,3 +36,22 @@ async def get_targets(
     )
     result = await db.execute(query)
     return result.scalars().all()
+
+
+@router.get("/get-target/{target}", response_model=TargetResponse, status_code=status.HTTP_200_OK)
+async def get_target(
+        current_user: CurrentUserDep,
+        db: DBSessionDep,
+        target: str
+        ):
+    query = select(Target).where(Target.user_id == current_user.id,
+                                 Target.username == target)
+    result = await db.execute(query)
+    target = result.scalar_one_or_none()
+    if not target:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found or invalid credential!"
+            )
+    
+    return target
