@@ -13,6 +13,6 @@ class Target(Base):
     platform: Mapped[str] = mapped_column(String(50))
     username: Mapped[str] = mapped_column(String(60))
     email: Mapped[str] = mapped_column(String(100))
-    phone: Mapped[str] = mapped_column(String(100))
+    phone: Mapped[str] = mapped_column(String(length=15))
     target_url: Mapped[str] = mapped_column(String(255))
     owner: Mapped[User] = relationship(back_populates="targets", lazy="joined")
