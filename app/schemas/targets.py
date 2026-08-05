@@ -13,6 +13,8 @@ class CreateTarget(BaseModel):
 class TargetResponse(BaseModel):
     username: str
     platform: str
+    email: EmailStr | None
+    phone: str | None
     target_url: str | None
 
 

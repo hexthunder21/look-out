@@ -1,10 +1,11 @@
 from typing import List
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from sqlalchemy import select
 from starlette import status
-from app.schemas.targets import CreateTarget, TargetResponse, TargetWithMessageResponse
+from app.schemas.targets import CreateTarget, TargetResponse, TargetWithMessageResponse, TargetType
 from app.api.deps import TargetParamsDep, CurrentUserDep, DBSessionDep
 from app.models.targets import Target
+from app.services.target import parse_target_credentials, TARGET_MAP
 
 
 router = APIRouter()
@@ -38,20 +39,28 @@ async def get_targets(
     return result.scalars().all()
 
 
-@router.get("/get-target/{target}", response_model=TargetResponse, status_code=status.HTTP_200_OK)
+@router.get("/get-target", response_model=TargetResponse)
 async def get_target(
         current_user: CurrentUserDep,
         db: DBSessionDep,
-        target: str
+        target: str = Query(..., description="Email, phone or username to search for")
         ):
-    query = select(Target).where(Target.user_id == current_user.id,
-                                 Target.username == target)
+    data_type, credential = await parse_target_credentials(target)
+    print(data_type, credential)
+
+    field = TARGET_MAP.get(data_type)
+    print(field)
+    if field is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid target type or format")
+
+    query = select(Target).where(Target.user_id == current_user.id, field == credential)
     result = await db.execute(query)
-    target = result.scalar_one_or_none()
-    if not target:
+    target_obj = result.scalar_one_or_none()
+
+    if not target_obj:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found or invalid credential!"
+            detail="Target not found."
             )
-    
-    return target
+
+    return target_obj
