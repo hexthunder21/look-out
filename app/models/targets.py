@@ -12,5 +12,7 @@ class Target(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     platform: Mapped[str] = mapped_column(String(50))
     username: Mapped[str] = mapped_column(String(60))
+    email: Mapped[str] = mapped_column(String(100))
+    phone: Mapped[str] = mapped_column(String(100))
     target_url: Mapped[str] = mapped_column(String(255))
     owner: Mapped[User] = relationship(back_populates="targets", lazy="joined")
