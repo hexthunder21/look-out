@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Path
 from sqlalchemy import select, delete, update
 from starlette import status
 from app.schemas.targets import CreateTarget, TargetResponse, TargetWithMessageResponse, TargetType
@@ -24,10 +24,10 @@ async def add_target(
     }
 
 
-@router.get("", response_model=List[TargetResponse], status_code=status.HTTP_200_OK)
+@router.get("", response_model=List[TargetResponse])
 async def get_targets(
-        current_user: CurrentUserDep,
         db: DBSessionDep,
+        current_user: CurrentUserDep,
         pagination_params: TargetParamsDep
     ):
     targets = await TargetService.get_targets(
@@ -38,21 +38,22 @@ async def get_targets(
     return targets
 
 
-# @router.get("/get-targets", response_model=List[TargetResponse], status_code=status.HTTP_200_OK)
-# async def get_targets(
-#         current_user: CurrentUserDep,
-#         db: DBSessionDep,
-#         pagination_params: TargetParamsDep
-#     ):
-#     query = (
-#         select(Target).where(Target.user_id == current_user.id)
-#         .limit(pagination_params.limit)
-#         .offset(pagination_params.offset)
-#     )
-#     result = await db.execute(query)
-#     return result.scalars().all()
-#
-#
+@router.get("/{target}", response_model=TargetResponse)
+async def get_target(
+        current_user: CurrentUserDep,
+        db: DBSessionDep,
+        target: str = Path(..., description="Target credential")
+    ):
+    single_target = await TargetService.get_target_by_credential(
+        db=db,
+        user_id=current_user.id,
+        raw_target_data=target
+    )
+
+    return single_target
+
+
+
 # @router.get("/get-target", response_model=TargetResponse)
 # async def get_target(
 #         current_user: CurrentUserDep,
