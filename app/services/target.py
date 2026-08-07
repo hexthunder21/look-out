@@ -3,7 +3,7 @@ from fastapi import HTTPException
 from starlette import status
 from sqlalchemy import select, delete, update
 from app.models.targets import Target
-from app.schemas.targets import TargetType, CreateTarget
+from app.schemas.targets import TargetType, CreateTarget, TargetResponse
 from app.api.deps import TargetParamsDep, CurrentUserDep, DBSessionDep
 import re
 
@@ -89,3 +89,25 @@ class TargetService:
                 )
 
         return target_obj
+
+
+    @classmethod
+    async def delete_target(
+            cls,
+            user_id: int,
+            db: DBSessionDep,
+            raw_target_data: str
+            ):
+        data_type, credential = await cls.parse_target_credentials(raw_target_data)
+        field = TARGET_MAP.get(data_type)
+        if field is None:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid target type or format")
+
+        query = delete(Target).where(Target.user_id == user_id, field == credential)
+        result = await db.execute(query)
+        await db.commit()
+
+        if result.rowcount == 0:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Target not found")
+
+        return {"message": "Target deleted successfully"}

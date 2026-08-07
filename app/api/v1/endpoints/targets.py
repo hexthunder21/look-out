@@ -1,10 +1,8 @@
 from typing import List
 from fastapi import APIRouter, HTTPException, Query, Path
-from sqlalchemy import select, delete, update
 from starlette import status
-from app.schemas.targets import CreateTarget, TargetResponse, TargetWithMessageResponse, TargetType
+from app.schemas.targets import CreateTarget, TargetResponse, TargetWithMessageResponse
 from app.api.deps import TargetParamsDep, CurrentUserDep, DBSessionDep
-from app.services.target import TARGET_MAP
 from app.services.target import TargetService
 
 
@@ -42,7 +40,7 @@ async def get_targets(
 async def get_target(
         current_user: CurrentUserDep,
         db: DBSessionDep,
-        target: str = Path(..., description="Target credential")
+        target: str = Path(..., description="Email, phone or username to search for")
     ):
     single_target = await TargetService.get_target_by_credential(
         db=db,
@@ -53,50 +51,14 @@ async def get_target(
     return single_target
 
 
-
-# @router.get("/get-target", response_model=TargetResponse)
-# async def get_target(
-#         current_user: CurrentUserDep,
-#         db: DBSessionDep,
-#         target: str = Query(..., description="Email, phone or username to search for")
-#         ):
-#     data_type, credential = await parse_target_credentials(target)
-#     field = TARGET_MAP.get(data_type)
-#
-#     if field is None:
-#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid target type or format")
-#
-#     query = select(Target).where(Target.user_id == current_user.id, field == credential)
-#     result = await db.execute(query)
-#     target_obj = result.scalar_one_or_none()
-#
-#     if not target_obj:
-#         raise HTTPException(
-#             status_code=status.HTTP_404_NOT_FOUND,
-#             detail="Target not found."
-#             )
-#
-#     return target_obj
-#
-#
-# @router.delete("/del-target", response_model=TargetWithMessageResponse)
-# async def delete_target(
-#         current_user: CurrentUserDep,
-#         db: DBSessionDep,
-#         target: str = Query(..., description="Email, phone or username to search for")
-#         ):
-#     data_type, credential = await parse_target_credentials(target)
-#     field = TARGET_MAP.get(data_type)
-#
-#     if field is None:
-#         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid target type or format")
-#
-#     query = delete(Target).where(Target.user_id == current_user.id, field == credential)
-#     result = await db.execute(query)
-#     await db.commit()
-#
-#     if result.rowcount == 0:
-#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Target not found")
-#
-#     return {"message": "Target deleted successfully"}
-
+@router.delete("/{target}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_target(
+        current_user: CurrentUserDep,
+        db: DBSessionDep,
+        target: str = Path(..., description="Email, phone or username to search for")
+    ):
+    await TargetService.delete_target(
+        db=db,
+        user_id=current_user.id,
+        raw_target_data=target
+    )
