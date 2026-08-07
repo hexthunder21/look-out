@@ -17,6 +17,14 @@ class CreateTarget(BaseModel):
             return None
         return v
 
+    @field_validator("phone", mode="before")
+    @classmethod
+    def phone_validator(cls, phone: str) -> str | None:
+        phone = phone.lstrip('+')
+        if phone.isdigit() and 7 <= len(phone) <= 15:
+            return phone
+        return None
+
 
 class TargetResponse(BaseModel):
     username: str
