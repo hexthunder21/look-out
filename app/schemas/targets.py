@@ -20,7 +20,7 @@ class TargetResponse(BaseModel):
 
 class TargetWithMessageResponse(BaseModel):
     message: str
-    # target: TargetResponse
+    target: TargetResponse
 
 
 class TargetType(str, Enum):
